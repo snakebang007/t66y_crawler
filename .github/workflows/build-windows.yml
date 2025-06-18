@@ -1,0 +1,80 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Create icon
+      run: python create_icon.py
+    
+    - name: Build Windows executable
+      run: |
+        pyinstaller --clean windows_build.spec
+    
+    - name: Create release package
+      run: |
+        mkdir release
+        copy "dist\BBS图片爬虫.exe" release\
+        copy "Windows安装说明.txt" release\
+        copy "LICENSE" release\ 2>nul || echo "LICENSE file not found, skipping"
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: BBS图片爬虫-Windows-${{ github.sha }}
+        path: release/
+        
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/BBS图片爬虫.exe
+          release/Windows安装说明.txt
+        body: |
+          ## BBS图片爬虫 Windows 版本
+          
+          ### 📦 安装说明
+          1. 下载 `BBS图片爬虫.exe` 文件
+          2. 双击运行即可使用
+          3. 首次启动可能需要10-30秒
+          
+          ### ✨ 功能特点
+          - 🌐 支持多种BBS网站的图片爬取
+          - 🖼️ 自动识别网页中的图片链接
+          - 📁 可自定义图片保存路径
+          - 💾 自动记忆设置
+          - 🔄 实时显示下载进度
+          
+          ### 🔧 系统要求
+          - Windows 7 或更高版本
+          - 64位操作系统
+          - 至少 100MB 可用磁盘空间
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
