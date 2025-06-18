@@ -13,6 +13,10 @@ jobs:
   build-windows:
     runs-on: windows-latest
     
+    env:
+      PYTHONIOENCODING: utf-8
+      PYTHONLEGACYWINDOWSFSENCODING: utf-8
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -29,7 +33,7 @@ jobs:
         pip install pyinstaller
     
     - name: Create icon
-      run: python create_icon.py
+      run: python create_icon_safe.py
     
     - name: Build Windows executable
       run: |

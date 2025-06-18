@@ -53,7 +53,7 @@ def create_icon():
     
     # 保存为 .ico 文件
     img.save('app_icon.ico', format='ICO', sizes=[(s, s) for s in sizes])
-    print("✅ 已创建图标文件: app_icon.ico")
+    print("已创建图标文件: app_icon.ico")
 
 if __name__ == "__main__":
     create_icon() 
