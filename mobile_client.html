@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBS图片爬虫 - 手机端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .form-container {
+            padding: 30px 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .quick-actions {
+            margin-top: 20px;
+        }
+        
+        .quick-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            color: #495057;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .history {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+        
+        .history h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+        
+        .history-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .history-item .url {
+            color: #667eea;
+            word-break: break-all;
+        }
+        
+        .history-item .time {
+            color: #6c757d;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .form-container {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕷️ BBS图片爬虫</h1>
+            <p>发现有趣网址，一键提交爬取</p>
+        </div>
+        
+        <div class="form-container">
+            <form id="crawlerForm">
+                <div class="form-group">
+                    <label for="webhookUrl">Webhook地址</label>
+                    <input type="url" id="webhookUrl" placeholder="http://your-server:5000/webhook/bbs" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="targetUrl">BBS网址</label>
+                    <input type="url" id="targetUrl" placeholder="https://example.com/thread/123" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="source">来源</label>
+                    <select id="source">
+                        <option value="mobile_web">手机网页</option>
+                        <option value="ios_safari">iOS Safari</option>
+                        <option value="android_chrome">Android Chrome</option>
+                        <option value="manual">手动输入</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">
+                    🚀 提交爬取任务
+                </button>
+            </form>
+            
+            <div id="status" class="status"></div>
+            
+            <div class="quick-actions">
+                <h3>快捷操作</h3>
+                <a href="#" class="quick-btn" onclick="pasteFromClipboard()">📋 粘贴剪贴板</a>
+                <a href="#" class="quick-btn" onclick="clearForm()">🗑️ 清空表单</a>
+                <a href="#" class="quick-btn" onclick="checkStatus()">📊 检查状态</a>
+            </div>
+            
+            <div class="history">
+                <h3>提交历史</h3>
+                <div id="historyList">
+                    <p style="color: #6c757d; text-align: center;">暂无提交记录</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadHistory();
+            
+            // 检测用户代理并自动设置来源
+            const userAgent = navigator.userAgent;
+            const sourceSelect = document.getElementById('source');
+            
+            if (/iPhone|iPad|iPod/.test(userAgent)) {
+                sourceSelect.value = 'ios_safari';
+            } else if (/Android/.test(userAgent)) {
+                sourceSelect.value = 'android_chrome';
+            }
+        });
+        
+        // 表单提交处理
+        document.getElementById('crawlerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const targetUrl = document.getElementById('targetUrl').value;
+            const source = document.getElementById('source').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
+            
+            // 保存设置
+            saveSettings();
+            
+            // 显示加载状态
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ 提交中...';
+            showStatus('正在提交任务...', 'loading');
+            
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: targetUrl,
+                        source: source
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showStatus('✅ 任务提交成功！', 'success');
+                    addToHistory(targetUrl, source, '成功');
+                    
+                    // 清空URL输入框
+                    document.getElementById('targetUrl').value = '';
+                } else {
+                    throw new Error(result.error || '提交失败');
+                }
+                
+            } catch (error) {
+                console.error('提交失败:', error);
+                showStatus('❌ 提交失败: ' + error.message, 'error');
+                addToHistory(targetUrl, source, '失败: ' + error.message);
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 提交爬取任务';
+            }
+        });
+        
+        // 显示状态消息
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            // 3秒后自动隐藏成功消息
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 粘贴剪贴板内容
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text && (text.startsWith('http://') || text.startsWith('https://'))) {
+                    document.getElementById('targetUrl').value = text;
+                    showStatus('📋 已粘贴剪贴板内容', 'success');
+                } else {
+                    showStatus('⚠️ 剪贴板中没有有效的URL', 'error');
+                }
+            } catch (error) {
+                showStatus('❌ 无法访问剪贴板', 'error');
+            }
+        }
+        
+        // 清空表单
+        function clearForm() {
+            document.getElementById('targetUrl').value = '';
+            document.getElementById('status').style.display = 'none';
+        }
+        
+        // 检查服务状态
+        async function checkStatus() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            if (!webhookUrl) {
+                showStatus('⚠️ 请先设置Webhook地址', 'error');
+                return;
+            }
+            
+            try {
+                const statusUrl = webhookUrl.replace('/webhook/bbs', '/webhook/status');
+                const response = await fetch(statusUrl);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const message = `📊 服务状态: ${result.status}\n队列长度: ${result.queue_length || 'N/A'}`;
+                    showStatus(message, 'success');
+                } else {
+                    throw new Error('状态检查失败');
+                }
+            } catch (error) {
+                showStatus('❌ 无法连接到服务器', 'error');
+            }
+        }
+        
+        // 保存设置到本地存储
+        function saveSettings() {
+            const settings = {
+                webhookUrl: document.getElementById('webhookUrl').value,
+                source: document.getElementById('source').value
+            };
+            localStorage.setItem('bbsCrawlerSettings', JSON.stringify(settings));
+        }
+        
+        // 加载设置
+        function loadSettings() {
+            const settings = localStorage.getItem('bbsCrawlerSettings');
+            if (settings) {
+                const parsed = JSON.parse(settings);
+                if (parsed.webhookUrl) {
+                    document.getElementById('webhookUrl').value = parsed.webhookUrl;
+                }
+                if (parsed.source) {
+                    document.getElementById('source').value = parsed.source;
+                }
+            }
+        }
+        
+        // 添加到历史记录
+        function addToHistory(url, source, status) {
+            const history = getHistory();
+            const item = {
+                url: url,
+                source: source,
+                status: status,
+                timestamp: new Date().toLocaleString('zh-CN')
+            };
+            
+            history.unshift(item);
+            
+            // 只保留最近10条记录
+            if (history.length > 10) {
+                history.splice(10);
+            }
+            
+            localStorage.setItem('bbsCrawlerHistory', JSON.stringify(history));
+            displayHistory();
+        }
+        
+        // 获取历史记录
+        function getHistory() {
+            const history = localStorage.getItem('bbsCrawlerHistory');
+            return history ? JSON.parse(history) : [];
+        }
+        
+        // 显示历史记录
+        function displayHistory() {
+            const history = getHistory();
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p style="color: #6c757d; text-align: center;">暂无提交记录</p>';
+                return;
+            }
+            
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div class="url">${item.url}</div>
+                    <div class="time">${item.timestamp} - ${item.source} - ${item.status}</div>
+                </div>
+            `).join('');
+        }
+        
+        // 加载历史记录
+        function loadHistory() {
+            displayHistory();
+        }
+        
+        // 添加PWA支持
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful');
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html> 
